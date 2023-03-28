@@ -10,7 +10,6 @@ This skeleton application was built for Composer. This makes setting up a new Sl
 To run the application in development, you can run these commands 
 
 ```bash
-cd [my-app-name]
 composer start
 ```
 
