@@ -4,9 +4,9 @@ namespace App\OrderDocumentMigrator;
 
 interface OrderDocumentMigratorConfig
 {
-    public const EXPORTER_URL = 'https://sw5.elektro-bruhn.de/shop/api';
-    public const EXPORTER_KEY = 'ntfrmc';
-    public const EXPORTER_SECRET = '3a8MIAfpB9nPn51VV1vpALJKQ33SvemfBCR70IDL';
+    public const EXPORTER_URL = '';
+    public const EXPORTER_KEY = '';
+    public const EXPORTER_SECRET = '';
 
 
     public const RECEIVER_URL = 'http://192.168.178.172:8080/api';
