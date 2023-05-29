@@ -17,6 +17,10 @@ Or you can use `docker-compose` to run the app with `docker`, so you can run the
 ```bash
 docker-compose up -d
 ```
+
+```bash
+docker exec -it shopmiddleware-slim-1 sh
+```
 ## Rin this:
 ### Open `http://localhost:8080/import-products` in Postman, And add JSON payload of products.
 

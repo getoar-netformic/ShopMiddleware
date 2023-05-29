@@ -31,6 +31,10 @@ $dependencies($containerBuilder);
 $repositories = require __DIR__ . '/../app/repositories.php';
 $repositories($containerBuilder);
 
+// Set up command line
+$console = require __DIR__ . '/../app/console.php';
+$console($containerBuilder);
+
 // Build PHP-DI Container instance
 $container = $containerBuilder->build();
 
@@ -80,3 +84,7 @@ $errorMiddleware->setDefaultErrorHandler($errorHandler);
 $response = $app->handle($request);
 $responseEmitter = new ResponseEmitter();
 $responseEmitter->emit($response);
+
+function public_path() {
+    return __DIR__;
+}

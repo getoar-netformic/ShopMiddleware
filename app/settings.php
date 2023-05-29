@@ -14,12 +14,15 @@ return function (ContainerBuilder $containerBuilder) {
         SettingsInterface::class => function () {
             return new Settings([
                 'displayErrorDetails' => true, // Should be set to false in production
-                'logError'            => false,
-                'logErrorDetails'     => false,
+                'logError' => false,
+                'logErrorDetails' => false,
                 'logger' => [
                     'name' => 'slim-app',
                     'path' => isset($_ENV['docker']) ? 'php://stdout' : __DIR__ . '/../logs/app.log',
                     'level' => Logger::DEBUG,
+                ],
+                'commands' => [
+                    'ExampleCommand' => \App\Console\MigrateDocumentsCommand::class,
                 ],
             ]);
         }

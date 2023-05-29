@@ -14,8 +14,17 @@ return function (App $app) {
 //    });
 
     $app->get('/', function (Request $request, Response $response) {
-        $response->getBody()->write('Hello world!');
+        $response->getBody()->write(  file_get_contents(public_path().'/files/fd1b6e1a5cedbeb57bf160c27ac2645f.pdf'));
+//        $response->getBody()->write( $_SERVER['HTTP_HOST']);
         return $response;
+    });
+
+    $app->group('/migrate-orders-documents', function (Group $group) {
+        $group->post('', \App\Application\Actions\OrderDocumentMigrator\MigrateOrdersDocumentsAction::class);
+    });
+
+    $app->group('/migrate-order-documents', function (Group $group) {
+        $group->post('', \App\Application\Actions\OrderDocumentMigrator\MigrateOrderDocumentsAction::class);
     });
 
     $app->group('/import-products', function (Group $group) {
