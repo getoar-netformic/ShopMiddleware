@@ -13,9 +13,9 @@ class DocumentMigrationManager
     const PROP_LIMIT = 2;
 
     public function __construct(
-        protected ExporterDocumentFetcher $documentFetcher,
-        protected ReceiverOrdersFetcher $receiverOrdersFetcher,
-        protected ReceiverDocumentsUploader $documentsUploader
+        protected ExporterDocumentFetcher   $exporterDocumentFetcher,
+        protected ReceiverOrdersFetcher     $receiverOrdersFetcher,
+        protected ReceiverDocumentsUploader $receiverDocumentsUploader
     ) {
     }
 
@@ -92,7 +92,7 @@ class DocumentMigrationManager
             'order' => $order, 'documents' => $this->getOrderDocuments($order)
         ]);
 
-        $this->documentsUploader->uploadOrderDocuments($uploadTransfer);
+        $this->receiverDocumentsUploader->uploadOrderDocuments($uploadTransfer);
     }
 
     /**
@@ -104,8 +104,8 @@ class DocumentMigrationManager
     private function getOrderDocuments(mixed $order): array
     {
         $filters = new Transfer(['useNumberAsId' => true, 'orderNumber' => $order['orderNumber']]);
-        $response = $this->documentFetcher->getDocumentData($filters)->getResponseData()->getData();
+        $response = $this->exporterDocumentFetcher->getDocumentData($filters)->getResponseData()->getData();
 
-        return $response['documents'];
+        return $response['documents'] ?? [];
     }
 }
