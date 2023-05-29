@@ -10,7 +10,7 @@ use App\OrderDocumentMigrator\Shared\Transfer;
 
 class DocumentMigrationManager
 {
-    const PROP_LIMIT = 2;
+    const PROP_LIMIT = 100;
 
     public function __construct(
         protected ExporterDocumentFetcher   $exporterDocumentFetcher,
