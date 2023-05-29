@@ -94,7 +94,7 @@ class ReceiverDocumentsUploader
             'fileType' => $this->getExtensionByType($document['type']['key']),
             'static' => true,
             'config' => [
-                'documentNumber' => (string) $document['id'].'migrateda', //TODO: documentId
+                'documentNumber' => (string) $document['documentId'],
                 'documentDate' => $document['date'],
             ]
         ];
