@@ -7,6 +7,7 @@ use App\OrderDocumentMigrator\Receiver\ReceiverDocumentsUploader;
 use App\OrderDocumentMigrator\Receiver\ReceiverOrdersFetcher;
 use App\OrderDocumentMigrator\Shared\ExecuteManager;
 use App\OrderDocumentMigrator\Shared\Transfer;
+use Exception;
 
 class DocumentMigrationManager
 {
@@ -35,6 +36,8 @@ class DocumentMigrationManager
         $offset = 0;
 
         $executeManager->progressBarSetSteps($responseData->getTotal());
+        sleep(1);
+        $executeManager->progressBarSetStep(self::PROP_LIMIT * $filters->getParams()['page']);
 
         while ($offset < $responseData->getTotal()) {
             $filters = new Transfer([
@@ -43,7 +46,7 @@ class DocumentMigrationManager
             $offset = self::PROP_LIMIT * $filters->getParams()['page'];
 
             $this->createUploadOrdersDocuments($responseData->getData());
-            $executeManager->progressBarAdvance($filters->getParams()['limit']);
+            $executeManager->progressBarAdvance(self::PROP_LIMIT);
 
             $responseData = $this->receiverOrdersFetcher->getOrders($filters)->getResponseData();
         }
@@ -103,9 +106,14 @@ class DocumentMigrationManager
      */
     private function getOrderDocuments(mixed $order): array
     {
-        $filters = new Transfer(['useNumberAsId' => true, 'orderNumber' => $order['orderNumber']]);
-        $response = $this->exporterDocumentFetcher->getDocumentData($filters)->getResponseData()->getData();
+        try {
+            $filters = new Transfer(['useNumberAsId' => true, 'orderNumber' => $order['orderNumber']]);
+            $response = $this->exporterDocumentFetcher->getDocumentData($filters)->getResponseData()?->getData() ?? [];
 
-        return $response['documents'] ?? [];
+            return $response['documents'] ?? [];
+        } catch (Exception) {
+            return [];
+        }
+
     }
 }

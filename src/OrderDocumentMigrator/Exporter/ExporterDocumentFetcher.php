@@ -3,7 +3,9 @@
 namespace App\OrderDocumentMigrator\Exporter;
 
 use App\OrderDocumentMigrator\Contracts\RestClient;
+use App\OrderDocumentMigrator\Logger\MigratiorLogger;
 use App\OrderDocumentMigrator\Shared\Transfer;
+use Exception;
 
 class ExporterDocumentFetcher
 {
@@ -20,12 +22,16 @@ class ExporterDocumentFetcher
      */
     public function getDocumentData(Transfer $documentsFilters): Transfer
     {
-        $filters = $documentsFilters->getParams();
-        $orderNumber = $filters['orderNumber'];
-        unset($filters['orderNumber']);
+        try {
+            $filters = $documentsFilters->getParams();
+            $orderNumber = $filters['orderNumber'];
+            unset($filters['orderNumber']);
 
-        $data = $this->client->get("/orders/$orderNumber", $documentsFilters->getParams());
-        $documentsFilters->setResponseData($data->getResponseData());
+            $data = $this->client->get("/orders/$orderNumber", $documentsFilters->getParams());
+            $documentsFilters->setResponseData($data->getResponseData());
+        } catch (Exception $e) {
+            MigratiorLogger::writer()->log($e->getMessage());
+        }
 
         return $documentsFilters;
     }

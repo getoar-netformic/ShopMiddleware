@@ -47,11 +47,12 @@ class ReceiverDocumentsUploader
         );
 
         try {
+            MigratiorLogger::writer()->log($path, 'info');
             $response = $this->client->post($path, json_encode($data), ['Content-Type' => 'application/json']);
 
             return new Transfer(null, $response->getResponseData());
         } catch (\Exception $e) {
-            MigratiorLogger::writer()->log($e->getMessage());
+            MigratiorLogger::writer()->log($e->getMessage(), 'error');
             return new Transfer();
         }
 
@@ -64,20 +65,25 @@ class ReceiverDocumentsUploader
      */
     public function uploadMediaFileForDocument(array $data): Transfer
     {
-        if (!file_exists($data['file'])) {
-            MigratiorLogger::writer()->log('File not exist: '. $data['file']);
+        try {
+            if (!file_exists($data['file'])) {
+                MigratiorLogger::writer()->log('File not exist: ' . $data['file']);
+                return new Transfer();
+            }
+
+            $path = sprintf('/_action/document/%s/upload?fileName=%s&extension=%s',
+                $data['documentId'], $data['fileName'], $data['extension']
+            );
+
+            $response = $this->client->post($path, file_get_contents($data['file']),
+                ['Content-Type' => 'application/octet-stream']
+            );
+
+            return new Transfer(null, $response->getResponseData());
+        }  catch (\Exception $e) {
+            MigratiorLogger::writer()->log($e->getMessage());
             return new Transfer();
         }
-
-        $path = sprintf('/_action/document/%s/upload?fileName=%s&extension=%s',
-            $data['documentId'], $data['fileName'], $data['extension']
-        );
-
-        $response = $this->client->post($path, file_get_contents($data['file']),
-            ['Content-Type' => 'application/octet-stream']
-        );
-
-        return new Transfer(null, $response->getResponseData());
     }
 
     /**
@@ -107,7 +113,7 @@ class ReceiverDocumentsUploader
      */
     protected function parseUploadDocumentData(array $document): array
     {
-        $link = sprintf('%s/files/%s.%s',
+        $link = sprintf('%s/documents/%s.%s',
             public_path(), $document['hash'], $this->getExtensionByType($document['type']['key'])
         );
 

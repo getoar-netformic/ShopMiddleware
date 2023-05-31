@@ -2,6 +2,7 @@
 
 namespace App\OrderDocumentMigrator\Logger;
 
+use Monolog\Logger;
 use Monolog\Logger as MonoLogger;
 use Monolog\Handler\StreamHandler;
 
@@ -15,8 +16,9 @@ class MigratiorLogger
 
     private function __construct()
     {
-        $this->monoLog = new MonoLogger('name');
-        $this->monoLog->pushHandler(new StreamHandler(__DIR__.'/./migrations.log', 200));
+        $this->monoLog = new MonoLogger('Logger');
+        $this->monoLog->pushHandler(new StreamHandler(__DIR__ . '/./repeat_migrations.log', Logger::INFO));
+        $this->monoLog->pushHandler(new StreamHandler(__DIR__ . '/./repeat_migrations_errors.log', Logger::ERROR));
     }
 
     public static function writer(): MigratiorLogger
@@ -24,7 +26,7 @@ class MigratiorLogger
         return self::$instance ?? self::$instance = new self();
     }
 
-    public function log(mixed $message, $method = 'info'): void
+    public function log(mixed $message, $method = 'error'): void
     {
         $this->monoLog->{$method}($message);
     }

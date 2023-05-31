@@ -45,6 +45,18 @@ class ExecuteManager
     }
 
     /**
+     * @param int $step
+     *
+     * @return void
+     */
+    public function progressBarSetStep(int $step): void
+    {
+        if (isset($this->progressBar)) {
+            $this->progressBar->setProgress($step);
+        }
+    }
+
+    /**
      * @return void
      */
     public function progressBarFinish(): void

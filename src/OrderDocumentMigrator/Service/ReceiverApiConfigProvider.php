@@ -43,9 +43,10 @@ class ReceiverApiConfigProvider implements ApiConfigProvider
                 "client_secret" => $this->config['secret']
             ]));
 
-
             $this->authenticator = json_decode((new Client())->sendRequest($request)->getBody()->getContents(), true);
-            $this->authenticator['created_at'] = time();
+
+            $this->authenticator['created_at'] = time() ;
+            print_r('Token refreshed');
         }
 
         return $this->authenticator['access_token'];
@@ -57,9 +58,9 @@ class ReceiverApiConfigProvider implements ApiConfigProvider
     private function isTokenValid(): bool
     {
         if ($this->authenticator) {
-            $availableTill = $this->authenticator['expires_in'] + $this->authenticator['created_at'];
+            $availableTill = $this->authenticator['expires_in'] + $this->authenticator['created_at'] - 2;
 
-            return $availableTill < time();
+            return $availableTill > time();
         }
 
         return false;
