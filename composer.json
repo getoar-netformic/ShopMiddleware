@@ -28,7 +28,7 @@
         "php-di/php-di": "^6.4",
         "slim/psr7": "^1.6",
         "slim/slim": "^4.11",
-        "symfony/console": "^6.2",
+        "symfony/console": "^6.3",
         "vin-sw/shopware-sdk": "^1.7"
     },
     "require-dev": {
