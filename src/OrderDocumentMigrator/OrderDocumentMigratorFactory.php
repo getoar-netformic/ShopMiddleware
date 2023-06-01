@@ -4,7 +4,10 @@ namespace App\OrderDocumentMigrator;
 
 use App\OrderDocumentMigrator\Exporter\ExporterDocumentFetcher;
 use App\OrderDocumentMigrator\Migrator\DocumentMigrationManager;
+use App\OrderDocumentMigrator\Migrator\DocumentsEnhancer;
+use App\OrderDocumentMigrator\Receiver\ReceiverDocumentsFetcher;
 use App\OrderDocumentMigrator\Receiver\ReceiverDocumentsUploader;
+use App\OrderDocumentMigrator\Receiver\ReceiverDocumentUpdater;
 use App\OrderDocumentMigrator\Receiver\ReceiverOrdersFetcher;
 use App\OrderDocumentMigrator\Service\ExporterApiConfigProvider;
 use App\OrderDocumentMigrator\Service\ReceiverApiConfigProvider;
@@ -21,6 +24,14 @@ class OrderDocumentMigratorFactory
         );
     }
 
+    public function createDocumentEnhancer(): DocumentsEnhancer
+    {
+        return new DocumentsEnhancer(
+            $this->creteDocumentUpdater(),
+            $this->createReceiverDocumentsFetcher()
+        );
+    }
+
     public function createDocumentFetcher(): ExporterDocumentFetcher
     {
         return new ExporterDocumentFetcher($this->createExporterRestClient());
@@ -28,12 +39,17 @@ class OrderDocumentMigratorFactory
 
     public function createDocumentUploader(): ReceiverDocumentsUploader
     {
-        return new ReceiverDocumentsUploader($this->createReceiverRestClient());
+        return new ReceiverDocumentsUploader($this->createReceiverRestClient(), $this->createReceiverDocumentsFetcher());
     }
 
     public function createOrdersFetcher(): ReceiverOrdersFetcher
     {
         return new ReceiverOrdersFetcher($this->createReceiverRestClient());
+    }
+
+    public function createReceiverDocumentsFetcher(): ReceiverDocumentsFetcher
+    {
+        return new ReceiverDocumentsFetcher($this->createReceiverRestClient());
     }
 
     protected function createExporterRestClient(): RestApiClient
@@ -54,5 +70,10 @@ class OrderDocumentMigratorFactory
     protected function createReceiverConfigProvider(): ReceiverApiConfigProvider
     {
         return new ReceiverApiConfigProvider(OrderDocumentMigratorConfig::RECEIVER_ACCESS_GRANT);
+    }
+
+    protected function creteDocumentUpdater(): ReceiverDocumentUpdater
+    {
+        return new ReceiverDocumentUpdater($this->createReceiverRestClient());
     }
 }

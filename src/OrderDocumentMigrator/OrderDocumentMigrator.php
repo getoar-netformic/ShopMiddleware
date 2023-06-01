@@ -29,6 +29,24 @@ class OrderDocumentMigrator
     }
 
     /**
+     * @param ExecuteManager|null $executeManager
+     * @return void
+     */
+    public static function enhanceAllMigratedDocuments(?ExecuteManager $executeManager): void
+    {
+        self::getFactory()->createDocumentEnhancer()->enhanceMigratedDocuments($executeManager);
+    }
+
+    /**
+     * @param ExecuteManager|null $executeManager
+     * @return void
+     */
+    public static function enhanceMigratedDocumentById(string $documentId): void
+    {
+        self::getFactory()->createDocumentEnhancer()->enhanceMigratedDocumentById($documentId);
+    }
+
+    /**
      * @return \App\OrderDocumentMigrator\OrderDocumentMigratorFactory
      */
     protected static function getFactory(): OrderDocumentMigratorFactory

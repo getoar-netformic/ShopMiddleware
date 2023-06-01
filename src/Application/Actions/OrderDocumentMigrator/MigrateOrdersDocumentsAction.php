@@ -10,15 +10,8 @@ class MigrateOrdersDocumentsAction extends Action
 {
     protected function action(): Response
     {
-       OrderDocumentMigrator::migrateOrdersDocuments();
+       OrderDocumentMigrator::migrateOrdersDocuments(null);
 
        return $this->respondWithData(['success' => true]);
-    }
-
-    public function importOrderDocuments()
-    {
-        $orderId = $this->getFormData();
-        var_dump($orderId); die();
-        OrderDocumentMigrator::migrateOrderDocuments();
     }
 }

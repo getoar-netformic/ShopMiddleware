@@ -5,12 +5,13 @@ namespace App\OrderDocumentMigrator\Receiver;
 use App\OrderDocumentMigrator\Logger\MigratiorLogger;
 use App\OrderDocumentMigrator\Service\RestApiClient;
 use App\OrderDocumentMigrator\Shared\Transfer;
+use GuzzleHttp\Exception\GuzzleException;
 use Slim\App;
 use Slim\Logger;
 
 class ReceiverDocumentsUploader
 {
-    public function __construct(protected RestApiClient $client)
+    public function __construct(protected RestApiClient $client, protected ReceiverDocumentsFetcher $documentsFetcher)
     {
     }
 
@@ -25,6 +26,8 @@ class ReceiverDocumentsUploader
         $documents = $response->getParams()['documents'];
 
         foreach ($documents as $document) {
+//            if ($document['type']['key'] !== 'cancellation') continue;
+
             $documentData = $this->parseCreateDocumentData($order, $document);
             $createdDocument = $this->createDocumentForOrder($documentData)->getResponseData()?->getData();
 
@@ -87,23 +90,42 @@ class ReceiverDocumentsUploader
     }
 
     /**
-     * @param $order
+     * @param array $order
      * @param array $document
      *
      * @return array
+     * @throws GuzzleException
      */
-    protected function parseCreateDocumentData($order, array $document): array
+    protected function parseCreateDocumentData(array $order, array $document): array
     {
-        return [
+        $typeMap = ['cancellation' => 'storno'];
+        $type = $document['type']['key'];
+
+        $documentData = [
             'orderId' => $order['id'],
-            'type' => $document['type']['key'],
-            'fileType' => $this->getExtensionByType($document['type']['key']),
+            'type' => $typeMap[$type] ?? $type,
+            'fileType' => $this->getExtensionByType($type),
             'static' => true,
             'config' => [
                 'documentNumber' => (string) $document['documentId'],
                 'documentDate' => $document['date'],
             ]
         ];
+
+        if ($type === 'cancellation') {
+            $invoices = $this->documentsFetcher->getInvoicesDocumentsByOrderId($order['id']);;
+
+            if (count($invoices) === 1) {
+                $invoiceConfig = $invoices[0]['config'];
+                $documentData['config']['custom']['invoiceNumber'] = (string) $invoiceConfig['documentNumber'] ?? null;
+
+                $documentData['referencedDocumentId'] = (string) $invoices[0]['_uniqueIdentifier'];
+            } else {
+                MigratiorLogger::writer()->log('Cancellation can not be created. Order has more or less than one invoice. OrderId: '. $order['id']);
+            }
+        }
+
+        return $documentData;
     }
 
     /**
@@ -120,7 +142,7 @@ class ReceiverDocumentsUploader
         return [
             'file' => $link,
             'extension' => $this->getExtensionByType($document['type']['key']),
-            'fileName' => $document['hash'],
+            'fileName' => $document['hash']. '_migrated2',
             'documentId' => $document['documentId'],
         ];
     }

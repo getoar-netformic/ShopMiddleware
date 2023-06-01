@@ -17,8 +17,8 @@ class MigratiorLogger
     private function __construct()
     {
         $this->monoLog = new MonoLogger('Logger');
-        $this->monoLog->pushHandler(new StreamHandler(__DIR__ . '/./repeat_migrations.log', Logger::INFO));
-        $this->monoLog->pushHandler(new StreamHandler(__DIR__ . '/./repeat_migrations_errors.log', Logger::ERROR));
+        $this->monoLog->pushHandler(new StreamHandler(__DIR__ . '/./migrations_cancellation.log', Logger::INFO));
+        $this->monoLog->pushHandler(new StreamHandler(__DIR__ . '/./migrations_cancellation_errors.log', Logger::ERROR));
     }
 
     public static function writer(): MigratiorLogger
