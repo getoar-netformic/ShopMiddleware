@@ -31,7 +31,7 @@ class DocumentMigrationManager
         $executeManager = $executeManager ?? new ExecuteManager();
         $executeManager->progressBarStart();
 
-        $filters = new Transfer(['limit' => self::PROP_LIMIT, 'page' => 333, 'total-count-mode' => 1]);
+        $filters = new Transfer(['limit' => self::PROP_LIMIT, 'page' => 1, 'total-count-mode' => 1]);
         $responseData = $this->receiverOrdersFetcher->getOrders($filters)->getResponseData();
         $offset = 0;
 
