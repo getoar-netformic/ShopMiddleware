@@ -27,6 +27,10 @@ return function (App $app) {
         $group->post('', \App\Application\Actions\OrderDocumentMigrator\MigrateOrderDocumentsAction::class);
     });
 
+    $app->group('/update-documents', function (Group $group) {
+        $group->post('', \App\Application\Actions\OrderDocumentMigrator\UpdateDocumentsAction::class);
+    });
+
     $app->group('/update-document', function (Group $group) {
         $group->post('', \App\Application\Actions\OrderDocumentMigrator\UpdateDocumentAction::class);
     });

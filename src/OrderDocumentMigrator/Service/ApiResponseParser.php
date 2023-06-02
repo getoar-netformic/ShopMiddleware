@@ -39,8 +39,9 @@ class ApiResponseParser implements RestResponseParser
     {
         try {
             $response = $this->response->getBody()->getContents();
+            $response = json_decode($response, true);
 
-            return json_decode($response, true);
+            return $response ?? [];
         } catch (\Exception $e) {
             return [];
         }

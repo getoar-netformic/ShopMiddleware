@@ -1,4 +1,6 @@
 <?php
+
+use App\Console\EnhanceDocumentsCommand;
 use App\Console\MigrateDocumentsCommand;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -11,6 +13,7 @@ function public_path() {
 
 $application = new Application();
 
+$application->add(new EnhanceDocumentsCommand());
 $application->add(new MigrateDocumentsCommand());
 
 $application->run();

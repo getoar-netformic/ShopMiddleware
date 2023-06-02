@@ -12,8 +12,9 @@ class UpdateDocumentAction extends Action
     protected function action(): Response
     {
         $documentId = $this->getFormData()['documentId'];
-        OrderDocumentMigrator::enhanceMigratedDocumentById($documentId);
 
-        return $this->respondWithData(['success' => true]);
+        $response = OrderDocumentMigrator::enhanceMigratedDocumentById($documentId);
+
+        return $this->respondWithData(['success' => true, 'data' => $response?->getData() ?? []]);
     }
 }

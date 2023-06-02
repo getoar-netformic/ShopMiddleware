@@ -38,12 +38,12 @@ class OrderDocumentMigrator
     }
 
     /**
-     * @param ExecuteManager|null $executeManager
-     * @return void
+     * @param string $documentId
+     * @return mixed
      */
-    public static function enhanceMigratedDocumentById(string $documentId): void
+    public static function enhanceMigratedDocumentById(string $documentId): mixed
     {
-        self::getFactory()->createDocumentEnhancer()->enhanceMigratedDocumentById($documentId);
+        return self::getFactory()->createDocumentEnhancer()->enhanceMigratedDocumentById($documentId);
     }
 
     /**

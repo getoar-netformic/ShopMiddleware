@@ -13,6 +13,7 @@ class RestApiClient implements RestClient
 {
     protected const METHOD_GET = 'get';
     protected const METHOD_POST = 'post';
+    protected const METHOD_PATCH = 'patch';
 
     /**
      * @var \GuzzleHttp\Client
@@ -51,6 +52,20 @@ class RestApiClient implements RestClient
     public function post(string $path, mixed $body = '', array $headers = []): RestResponseParser
     {
         $request = $this->createShopwareApiRequest(self::METHOD_POST, $path, $body, $headers);
+
+        return new ApiResponseParser($this->restClient->sendAsync($request)->wait());
+    }
+
+    /**
+     * @param string $path
+     * @param mixed $body
+     * @param array $headers
+     *
+     * @return \App\OrderDocumentMigrator\Contracts\RestResponseParser
+     */
+    public function patch(string $path, mixed $body = '', array $headers = []): RestResponseParser
+    {
+        $request = $this->createShopwareApiRequest(self::METHOD_PATCH, $path, $body, $headers);
 
         return new ApiResponseParser($this->restClient->sendAsync($request)->wait());
     }

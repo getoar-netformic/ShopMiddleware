@@ -22,4 +22,14 @@ interface RestClient
      * @return \App\OrderDocumentMigrator\Contracts\RestResponseParser
      */
     public function post(string $path, array $body = [], array $headers = []): RestResponseParser;
+
+    /**
+     * @param string $path
+     * @param array $body
+     * @param array $headers
+     *
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return \App\OrderDocumentMigrator\Contracts\RestResponseParser
+     */
+    public function patch(string $path, array $body, array $headers = []): RestResponseParser;
 }
