@@ -5,6 +5,7 @@ namespace App\OrderDocumentMigrator\Receiver;
 use App\OrderDocumentMigrator\Logger\MigratiorLogger;
 use App\OrderDocumentMigrator\Service\RestApiClient;
 use App\OrderDocumentMigrator\Shared\Transfer;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Slim\App;
 use Slim\Logger;
@@ -26,14 +27,23 @@ class ReceiverDocumentsUploader
         $documents = $response->getParams()['documents'];
 
         foreach ($documents as $document) {
-//            if ($document['type']['key'] !== 'cancellation') continue;
+            try {
+                if ($document['type']['key'] !== 'cancellation') continue;
 
-            $documentData = $this->parseCreateDocumentData($order, $document);
-            $createdDocument = $this->createDocumentForOrder($documentData)->getResponseData()?->getData();
+                if ($document['type']['key'] === 'cancellation') {
+                    $documentData = $this->parseCancellationDocument($order, $document);
+                    $createdDocument = $this->createCancellationDocument($documentData)->getResponseData()?->getData();
+                } else {
+                    $documentData = $this->parseCreateDocumentData($order, $document);
+                    $createdDocument = $this->createDocumentForOrder($documentData)->getResponseData()?->getData();
+                }
 
-            if ($createdDocument) {
-                $documentEntity = $this->parseUploadDocumentData(array_merge($document, $createdDocument));
-                $this->uploadMediaFileForDocument($documentEntity);
+                if ($createdDocument) {
+                    $documentEntity = $this->parseUploadDocumentData(array_merge($document, $createdDocument));
+                    $this->uploadMediaFileForDocument($documentEntity);
+                }
+            } catch (Exception $e) {
+                continue;
             }
         }
     }
@@ -59,6 +69,26 @@ class ReceiverDocumentsUploader
             return new Transfer();
         }
 
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return Transfer
+     */
+    public function createCancellationDocument(array $data): Transfer
+    {
+        $path ='/document?_response=detail';
+
+        try {
+            MigratiorLogger::writer()->log($data['orderId'], 'info');
+            $response = $this->client->post($path, json_encode($data), ['Content-Type' => 'application/json']);
+
+            return new Transfer(null, $response->getResponseData());
+        } catch (\Exception $e) {
+            MigratiorLogger::writer()->log($e->getMessage());
+            return new Transfer();
+        }
     }
 
     /**
@@ -94,38 +124,61 @@ class ReceiverDocumentsUploader
      * @param array $document
      *
      * @return array
-     * @throws GuzzleException
      */
     protected function parseCreateDocumentData(array $order, array $document): array
     {
         $typeMap = ['cancellation' => 'storno'];
         $type = $document['type']['key'];
 
-        $documentData = [
+        return [
             'orderId' => $order['id'],
             'type' => $typeMap[$type] ?? $type,
             'fileType' => $this->getExtensionByType($type),
             'static' => true,
             'config' => [
+                'custom' => [
+                    $this->getTypeNumberKey($typeMap[$type] ?? $type) => (string) $document['documentId']
+                ],
                 'documentNumber' => (string) $document['documentId'],
                 'documentDate' => $document['date'],
             ]
         ];
+    }
 
-        if ($type === 'cancellation') {
-            $invoices = $this->documentsFetcher->getInvoicesDocumentsByOrderId($order['id']);;
+    /**
+     * @param array $order
+     * @param array $document
+     * @ return array
+     *
+     * @throws GuzzleException
+     */
+    protected function parseCancellationDocument(array $order, array $document): array
+    {
+        $documentTypeId = '0b49ed15582c47e09c85ac20658ab5f0';
+        $typeMap = ['cancellation' => 'storno'];
+        $type = $document['type']['key'];
+        $invoices = $this->documentsFetcher->getInvoicesDocumentsByOrderId($order['id']);
 
-            if (count($invoices) === 1) {
-                $invoiceConfig = $invoices[0]['config'];
-                $documentData['config']['custom']['invoiceNumber'] = (string) $invoiceConfig['documentNumber'] ?? null;
-
-                $documentData['referencedDocumentId'] = (string) $invoices[0]['_uniqueIdentifier'];
-            } else {
-                MigratiorLogger::writer()->log('Cancellation can not be created. Order has more or less than one invoice. OrderId: '. $order['id']);
-            }
+        if (count($invoices) !== 1) {
+            throw new Exception('No invoice can not be determined to be cancelled for this order: ' . $order['id']);
         }
 
-        return $documentData;
+        return [
+            'orderId' => $order['id'],
+            'documentTypeId' => $documentTypeId,
+            'referencedDocumentId' => (string)$invoices[0]['_uniqueIdentifier'],
+            'fileType' => $this->getExtensionByType($type),
+            'deepLinkCode' => $document['hash'],
+            'static' => true,
+            'config' => [
+                'custom' => [
+                    $this->getTypeNumberKey($typeMap[$type] ?? $type) => (string)$document['documentId'],
+                    'invoiceNumber' => (string)$invoices[0]['config']['documentNumber'] ?? 'null'
+                ],
+                'documentNumber' => (string)$document['documentId'],
+                'documentDate' => $document['date'],
+            ]
+        ];
     }
 
     /**
@@ -142,8 +195,8 @@ class ReceiverDocumentsUploader
         return [
             'file' => $link,
             'extension' => $this->getExtensionByType($document['type']['key']),
-            'fileName' => $document['hash']. '_migrated2',
-            'documentId' => $document['documentId'],
+            'fileName' => $document['hash'],
+            'documentId' => $document['_uniqueIdentifier'] ?? $document['documentId'],
         ];
     }
 
@@ -157,6 +210,13 @@ class ReceiverDocumentsUploader
         $typesToExtension = ['invoice' => 'pdf'];
 
         return $typesToExtension[$type] ?? 'pdf';
+    }
+
+    protected function getTypeNumberKey($type): string
+    {
+        $separator = '_';
+
+        return lcfirst(str_replace($separator, '', ucwords($type, $separator))).'Number';
     }
 
 }
